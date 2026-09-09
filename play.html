@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentence Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#16232B;
+  --paper:#EDF0EF;
+  --surface:#FFFFFF;
+  --line:#D2D9D7;
+  --muted:#5F706C;
+  --teal:#1B6B58;
+  --teal-soft:#E4EFEB;
+  --ember:#A9491A;
+  --ember-soft:#F7E9E1;
+  --focus:#2F6FA8;
+  --radius:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Atkinson Hyperlegible',system-ui,sans-serif;
+  font-size:18px;
+  line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:640px;margin:0 auto;padding:20px 18px 80px}
+
+/* ---------- top bar ---------- */
+.bar{display:flex;align-items:center;gap:14px;padding:14px 0 18px;border-bottom:1px solid var(--line);margin-bottom:26px}
+.bar h1{font-size:19px;margin:0;font-weight:700;letter-spacing:-.01em}
+.bar .who{margin-left:auto;font-size:14px;color:var(--muted)}
+.seg{display:flex;gap:4px;margin-top:12px}
+.seg i{flex:1;height:5px;background:var(--line);border-radius:99px}
+.seg i.done{background:var(--teal)}
+.seg i.miss{background:var(--ember)}
+.seg i.now{background:var(--ink)}
+
+/* ---------- directions ---------- */
+.dir{font-size:20px;font-weight:700;margin:0 0 6px}
+.dir-t{font-size:16px;color:var(--muted);margin:0 0 24px}
+
+/* ---------- cue strips: the visual heart ---------- */
+.cues{margin:0 0 26px;padding:0;list-style:none}
+.cues li{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-left:3px solid var(--ink);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  margin-bottom:7px;
+  font-size:19px;
+  transition:transform .45s ease, opacity .45s ease, border-color .3s ease;
+}
+.cues.merged li{
+  border-left-color:var(--teal);
+  transform:translateY(calc(var(--shift,0) * -1px)) scaleY(.96);
+  opacity:.35;
+}
+@media (prefers-reduced-motion:reduce){
+  .cues li{transition:none}
+  .cues.merged li{transform:none}
+}
+
+.stem{
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px;font-size:21px;margin:0 0 8px;
+}
+.hint{color:var(--muted);font-size:16px;margin:0 0 24px}
+
+/* ---------- input ---------- */
+textarea{
+  width:100%;min-height:96px;padding:14px;font:inherit;font-size:19px;
+  border:1.5px solid var(--line);border-radius:var(--radius);background:var(--surface);
+  color:var(--ink);resize:vertical;
+}
+textarea:focus,button:focus-visible,input:focus{outline:3px solid var(--focus);outline-offset:1px}
+.row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+button{
+  font:inherit;font-weight:700;border:0;border-radius:var(--radius);
+  padding:13px 22px;background:var(--ink);color:#fff;cursor:pointer;
+}
+button:disabled{opacity:.4;cursor:default}
+button.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);font-weight:400;padding:10px 14px}
+.tries{margin-left:auto;font-size:15px;color:var(--muted)}
+
+/* ---------- options (blank) ---------- */
+.opts{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+.opts button{background:var(--surface);color:var(--ink);border:1.5px solid var(--line);font-weight:400;font-size:19px;padding:12px 20px}
+.opts button.used{opacity:.35;text-decoration:line-through}
+.opts button.picked{background:var(--teal);color:#fff;border-color:var(--teal)}
+.gap{display:inline-block;min-width:100px;border-bottom:2.5px solid var(--ink);text-align:center;font-weight:700}
+
+/* ---------- proofread ---------- */
+.passage{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;font-size:20px;line-height:2.1}
+.tok{cursor:pointer;padding:2px 3px;border-radius:3px;border-bottom:2px dotted transparent}
+.tok:hover{background:var(--teal-soft);border-bottom-color:var(--muted)}
+.tok.edited{background:var(--teal-soft);font-weight:700;border-bottom:2px solid var(--teal)}
+.tok.missed{background:var(--ember-soft);border-bottom:2px solid var(--ember)}
+.tok.overcorrect{background:#EFE7F5;border-bottom:2px solid #6B4C93}
+.tok input{font:inherit;font-size:19px;width:auto;min-width:80px;border:1.5px solid var(--ink);border-radius:3px;padding:1px 4px}
+
+/* ---------- feedback ---------- */
+.fb{margin-top:18px;padding:14px 16px;border-radius:var(--radius);font-size:18px;border-left:4px solid}
+.fb.revise{background:var(--ember-soft);border-color:var(--ember)}
+.fb.good{background:var(--teal-soft);border-color:var(--teal)}
+.fb b{display:block;margin-bottom:2px}
+.model{margin-top:10px;font-size:17px;color:var(--muted)}
+.model span{color:var(--ink);font-weight:700}
+
+/* ---------- login / report ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
+label{display:block;font-size:15px;color:var(--muted);margin:16px 0 5px}
+input[type=text],select{width:100%;padding:12px;font:inherit;font-size:18px;border:1.5px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink)}
+.big{font-size:62px;font-weight:700;line-height:1;letter-spacing:-.03em}
+.band{display:inline-block;padding:5px 12px;border-radius:99px;font-size:15px;font-weight:700;color:#fff}
+.band.green{background:#2F7D4F}.band.yellow{background:#B8860B}.band.red{background:#A93A3A}
+.recap{margin-top:26px;border-top:1px solid var(--line)}
+.recap div{padding:12px 0;border-bottom:1px solid var(--line);font-size:17px}
+.recap small{color:var(--muted);display:block;font-size:14px}
+.speak{background:none;border:0;padding:4px 6px;cursor:pointer;font-size:17px;color:var(--muted);vertical-align:middle}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script src="content.js"></script>
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+var SUPA_URL = 'https://lhmwtfyceilgndpygivj.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxobXd0ZnljZWlsZ25kcHlnaXZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk5MDIsImV4cCI6MjA5MTcxNTkwMn0.0uIXyctHMfTN4doWYn2JJ260swD5b-t0T-oDMSIPtBU';
+var AI_ENDPOINT = SUPA_URL + '/functions/v1/anthropic-proxy';
+var MAX_TRIES = 5;
+
+var LANG_NAMES = {es:'Español', zh:'中文', vi:'Tiếng Việt', ar:'العربية', tl:'Tagalog', pt:'Português', ru:'Русский', ja:'日本語', ko:'한국어', fr:'Français', ne:'नेपाली'};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+var S = {
+  student:'', period:'', lang:'',
+  activity:null, index:0, tries:0,
+  score:0, total:0, sessionId:null, replay:1,
+  log:[], locked:false, picked:null, edits:{}
+};
+
+var app = document.getElementById('app');
+
+/* ============================================================
+   SUPABASE (plain REST, no library)
+   ============================================================ */
+function sbHeaders(extra){
+  var h = {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
+  if(extra){ for(var k in extra){ h[k]=extra[k]; } }
+  return h;
+}
+function sbInsert(table, row, wantRow){
+  var url = SUPA_URL + '/rest/v1/' + table;
+  var h = sbHeaders(wantRow ? {'Prefer':'return=representation'} : {'Prefer':'return=minimal'});
+  return fetch(url,{method:'POST',headers:h,body:JSON.stringify(row)})
+    .then(function(r){ return wantRow ? r.json() : null; })
+    .catch(function(e){ console.warn('save failed',e); return null; });
+}
+function sbPatch(table, match, row){
+  var url = SUPA_URL + '/rest/v1/' + table + '?' + match;
+  return fetch(url,{method:'PATCH',headers:sbHeaders({'Prefer':'return=minimal'}),body:JSON.stringify(row)})
+    .catch(function(e){ console.warn('update failed',e); });
+}
+function sbSelect(table, query){
+  var url = SUPA_URL + '/rest/v1/' + table + '?' + query;
+  return fetch(url,{headers:sbHeaders()}).then(function(r){return r.json();})
+    .catch(function(){ return []; });
+}
+
+/* ============================================================
+   NORMALIZING + MATCHING
+   ============================================================ */
+function normFull(s){
+  return String(s==null?'':s)
+    .replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"')
+    .toLowerCase().replace(/\s+/g,' ')
+    .replace(/\s+([,.!?;:])/g,'$1')
+    .trim().replace(/[.!?]+$/,'').trim();
+}
+function normBare(s){
+  return normFull(s).replace(/[^a-z0-9' ]/g,'').replace(/\s+/g,' ').trim();
+}
+function matchesAny(list, val, fn){
+  return findOptimal(list, val, fn) !== null;
+}
+function findOptimal(list, val, fn){
+  if(!list) return null;
+  var target = fn(val);
+  for(var i=0;i<list.length;i++){ if(fn(list[i])===target) return list[i]; }
+  return null;
+}
+/* Mechanics run LAST, the way Quill does it: meaning first, then the marks.
+   Returns a feedback string, or null if the mechanics are fine. */
+function mechanicsIssue(act, answer, model){
+  if(!act.mechanics) return null;
+  var raw = String(answer==null?'':answer).trim();
+  if(!raw) return null;
+  var c0 = raw[0];
+  if(c0.toUpperCase() !== c0.toLowerCase() && c0 === c0.toLowerCase()){
+    return 'Start your sentence with a capital letter.';
+  }
+  if(!/[.!?]$/.test(raw)) return 'End your sentence with a period.';
+  if(model){
+    var mw = model.split(/\s+/);
+    for(var i=1;i<mw.length;i++){
+      var w = mw[i].replace(/[^A-Za-z']/g,'');
+      if(!w) continue;
+      if(w[0] === w[0].toLowerCase()) continue;            /* not capitalized in the model */
+      var exact = null, loose = null;
+      try{ exact = new RegExp('\\b'+w+'\\b'); loose = new RegExp('\\b'+w+'\\b','i'); }catch(e){ continue; }
+      if(loose.test(raw) && !exact.test(raw)){
+        return 'Names and places start with a capital letter. Look at ' + w.toLowerCase() + '.';
+      }
+    }
+  }
+  return null;
+}
+function rx(p){ try{ return new RegExp(p,'i'); }catch(e){ return null; } }
+
+/* ============================================================
+   THE FEEDBACK ENGINE
+   Returns {ok:bool, feedback:string}
+   ============================================================ */
+function evaluate(act, prompt, answer){
+  var full = normFull(answer);
+  var bare = normBare(answer);
+
+  if(!full) return {ok:false, feedback:'Write your sentence in the box.'};
+
+  /* 1. exact-content match — still has to clear mechanics */
+  var hit = findOptimal(prompt.optimal, answer, normFull);
+  if(hit){
+    var m1 = mechanicsIssue(act, answer, hit);
+    return m1 ? {ok:false, feedback:m1} : {ok:true, feedback:''};
+  }
+
+  /* 2. right words, wrong punctuation — the staged move */
+  var want = findOptimal(prompt.optimal, answer, normBare);
+  if(want){
+    var m2 = mechanicsIssue(act, answer, want);
+    if(m2) return {ok:false, feedback:m2};
+    if(want.indexOf(',')>-1 && String(answer).indexOf(',')<0){
+      return {ok:false, feedback:'Good work. Now add the comma.'};
+    }
+    return {ok:false, feedback:'Good work. Now check your punctuation.'};
+  }
+
+  /* 3. authored rules, in order */
+  var rules = prompt.rules || [];
+  for(var r=0;r<rules.length;r++){
+    var rule = rules[r];
+    if(rule.when==='contains'){
+      var re = rx(rule.pattern);
+      if(re && re.test(full)) return {ok:false, feedback:rule.feedback};
+    } else if(rule.when==='missing'){
+      var re2 = rx(rule.pattern);
+      if(re2 && !re2.test(full)) return {ok:false, feedback:rule.feedback};
+    } else if(rule.when==='shorter'){
+      if(full.split(' ').length < (rule.than||0)) return {ok:false, feedback:rule.feedback};
+    } else if(rule.when==='same'){
+      var cues = prompt.cues || [];
+      for(var c=0;c<cues.length;c++){
+        if(normBare(cues[c])===bare) return {ok:false, feedback:rule.feedback};
+      }
+    }
+  }
+
+  /* 4. accept-patterns for open-ended prompts */
+  if(prompt.accept){
+    for(var a=0;a<prompt.accept.length;a++){
+      var ra = rx(prompt.accept[a]);
+      if(ra && ra.test(full)) return {ok:true, feedback:''};
+    }
+  }
+
+  /* 5. mechanics, last */
+  var m3 = mechanicsIssue(act, answer, null);
+  if(m3) return {ok:false, feedback:m3};
+
+  return {ok:false, feedback:null}; /* null = try AI, then fallback */
+}
+
+/* ---------- optional AI hint through the Supabase proxy ---------- */
+function aiHint(act, prompt, answer){
+  var target = (QF_CONTENT.skills && QF_CONTENT.skills[prompt.skill||act.skill]) || (prompt.skill||act.skill||'');
+  var ideas = (prompt.cues||[prompt.stem||'']).join(' / ');
+  var sys = 'You are helping a high school newcomer English learner revise ONE sentence. '
+    + 'Give exactly one short hint, under 15 words, at a very low English reading level. '
+    + 'Never write the correct sentence for them. Never say "incorrect" or "wrong". '
+    + 'Point at one thing to change. No greeting, no preamble, just the hint.';
+  var usr = 'Target skill: ' + target + '\nIdeas to use: ' + ideas
+    + '\nDirections: ' + (act.directions && act.directions.text ? act.directions.text : '')
+    + '\nStudent wrote: ' + answer;
+
+  return fetch(AI_ENDPOINT,{
+    method:'POST',
+    headers:sbHeaders(),
+    body:JSON.stringify({
+      model:'claude-sonnet-4-6',
+      max_tokens:100,
+      system:sys,
+      messages:[{role:'user',content:usr}]
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(d && d.content && d.content.length){
+      var t = '';
+      for(var i=0;i<d.content.length;i++){ if(d.content[i].type==='text') t += d.content[i].text; }
+      return t.trim();
+    }
+    return null;
+  })
+  .catch(function(){ return null; });
+}
+
+/* ============================================================
+   LOGGING
+   ============================================================ */
+function startSession(){
+  var a = S.activity;
+  return sbSelect('qf_sessions','student_name=eq.'+encodeURIComponent(S.student)+'&activity_id=eq.'+encodeURIComponent(a.id)+'&select=id')
+    .then(function(prev){
+      S.replay = (prev && prev.length ? prev.length : 0) + 1;
+      return sbInsert('qf_sessions',{
+        student_name:S.student, class_period:S.period,
+        activity_id:a.id, activity_title:a.title, tool:a.tool,
+        total:S.total, replay_number:S.replay
+      }, true);
+    })
+    .then(function(rows){
+      if(rows && rows.length) S.sessionId = rows[0].id;
+    });
+}
+function logAttempt(prompt, n, response, feedback, ok){
+  var a = S.activity;
+  S.log.push({prompt:prompt, n:n, response:response, feedback:feedback, ok:ok});
+  sbInsert('qf_attempts',{
+    session_id:S.sessionId, student_name:S.student, class_period:S.period,
+    activity_id:a.id, prompt_id:prompt.id, prompt_index:S.index,
+    attempt_number:n, response:response, feedback:feedback||'',
+    is_optimal:!!ok, skill:prompt.skill||a.skill||null, standard:prompt.standard||a.standard||null
+  });
+}
+function endSession(){
+  var pct = S.total ? Math.round(S.score/S.total*100) : 0;
+  var band = pct>=83 ? 'green' : (pct>=32 ? 'yellow' : 'red');
+  if(S.sessionId){
+    sbPatch('qf_sessions','id=eq.'+S.sessionId,{
+      completed_at:new Date().toISOString(), score:S.score, total:S.total,
+      percent:pct, proficiency:band
+    });
+  }
+  return {pct:pct, band:band};
+}
+
+/* ============================================================
+   SPEECH
+   ============================================================ */
+function say(text){
+  if(!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang='en-US'; u.rate=0.85;
+  speechSynthesis.speak(u);
+}
+function speakBtn(text){
+  return '<button class="speak" data-say="'+esc(text)+'" aria-label="Listen">&#9654;&#65038;</button>';
+}
+function esc(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ============================================================
+   SCREEN 1 — sign in
+   ============================================================ */
+function screenLogin(){
+  var acts = QF_CONTENT.activities;
+  var qs = new URLSearchParams(location.search);
+  var pre = qs.get('a') || '';
+  var langs = QF_CONTENT.meta.languages || [];
+
+  var opts = '';
+  for(var i=0;i<acts.length;i++){
+    var sel = acts[i].id===pre ? ' selected' : '';
+    opts += '<option value="'+esc(acts[i].id)+'"'+sel+'>'+esc(acts[i].title)+'</option>';
+  }
+  var langOpts = '<option value="">English only</option>';
+  for(var j=0;j<langs.length;j++){
+    langOpts += '<option value="'+esc(langs[j])+'">'+esc(LANG_NAMES[langs[j]]||langs[j])+'</option>';
+  }
+
+  app.innerHTML =
+    '<div class="bar"><h1>'+esc(QF_CONTENT.meta.title)+'</h1></div>'
+    + '<div class="card">'
+    + '<label for="nm">Your name</label><input type="text" id="nm" autocomplete="off">'
+    + '<label for="pd">Period</label><input type="text" id="pd" autocomplete="off">'
+    + '<label for="lg">Your language</label><select id="lg">'+langOpts+'</select>'
+    + '<label for="ac">Activity</label><select id="ac">'+opts+'</select>'
+    + '<div class="row"><button id="go">Start</button></div>'
+    + '</div>';
+
+  var saved = localStorage.getItem('qf_id');
+  if(saved){
+    try{
+      var o = JSON.parse(saved);
+      document.getElementById('nm').value = o.n||'';
+      document.getElementById('pd').value = o.p||'';
+      document.getElementById('lg').value = o.l||'';
+    }catch(e){}
+  }
+
+  document.getElementById('go').onclick = function(){
+    var n = document.getElementById('nm').value.trim();
+    if(!n){ document.getElementById('nm').focus(); return; }
+    S.student = n;
+    S.period  = document.getElementById('pd').value.trim();
+    S.lang    = document.getElementById('lg').value;
+    localStorage.setItem('qf_id', JSON.stringify({n:S.student,p:S.period,l:S.lang}));
+    var id = document.getElementById('ac').value;
+    for(var i=0;i<QF_CONTENT.activities.length;i++){
+      if(QF_CONTENT.activities[i].id===id) S.activity = QF_CONTENT.activities[i];
+    }
+    S.index=0; S.tries=0; S.score=0; S.log=[];
+    S.total = S.activity.prompts.length;
+    if(S.activity.tool==='proof'){
+      S.total = 0;
+      for(var p=0;p<S.activity.prompts.length;p++){
+        S.total += parseProof(S.activity.prompts[p].passage).filter(function(t){return t.isError;}).length;
+      }
+    }
+    startSession();
+    render();
+  };
+}
+
+/* ============================================================
+   SHARED CHROME
+   ============================================================ */
+function chrome(){
+  var a = S.activity;
+  var segs = '';
+  var n = a.prompts.length;
+  for(var i=0;i<n;i++){
+    var cls = i<S.index ? (S.log.some(function(l){return l.prompt.id===a.prompts[i].id && l.ok;}) ? 'done':'miss')
+            : (i===S.index ? 'now':'');
+    segs += '<i class="'+cls+'"></i>';
+  }
+  var dirText = a.directions ? a.directions.text : '';
+  var dirT = (a.directions && a.directions.t && S.lang && a.directions.t[S.lang]) ? a.directions.t[S.lang] : '';
+  return '<div class="bar"><h1>'+esc(a.title)+'</h1><span class="who">'+esc(S.student)+'</span></div>'
+    + '<div class="seg">'+segs+'</div>'
+    + '<p class="dir" style="margin-top:22px">'+esc(dirText)+' '+speakBtn(dirText)+'</p>'
+    + (dirT ? '<p class="dir-t">'+esc(dirT)+'</p>' : '<div style="height:18px"></div>');
+}
+
+function wireSpeak(){
+  var bs = app.querySelectorAll('[data-say]');
+  for(var i=0;i<bs.length;i++){
+    bs[i].onclick = function(){ say(this.getAttribute('data-say')); };
+  }
+}
+
+/* ============================================================
+   RENDER — dispatch by tool
+   ============================================================ */
+function render(){
+  var a = S.activity;
+  if(S.index >= a.prompts.length){ screenReport(); return; }
+  if(a.tool==='blank') return renderBlank();
+  if(a.tool==='proof') return renderProof();
+  return renderText();
+}
+
+/* ---------- combine + write ---------- */
+function renderText(){
+  var a = S.activity, p = a.prompts[S.index];
+  var body = '';
+  if(a.tool==='combine'){
+    var lis='';
+    for(var i=0;i<p.cues.length;i++){
+      lis += '<li>'+esc(p.cues[i])+' '+speakBtn(p.cues[i])+'</li>';
+    }
+    body = '<ul class="cues" id="cues">'+lis+'</ul>';
+  } else {
+    body = '<p class="stem">'+esc(p.stem)+' '+speakBtn(p.stem)+'</p>'
+         + (p.hint ? '<p class="hint">'+esc(p.hint)+'</p>' : '<div style="height:16px"></div>');
+  }
+
+  app.innerHTML = chrome() + body
+    + '<textarea id="ans" rows="3" spellcheck="false"></textarea>'
+    + '<div class="row"><button id="sub">Check</button>'
+    + '<span class="tries" id="tries"></span></div>'
+    + '<div id="fbox"></div>';
+
+  updateTries();
+  wireSpeak();
+  var ta = document.getElementById('ans');
+  ta.focus();
+  ta.onkeydown = function(e){
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('sub').click(); }
+  };
+  document.getElementById('sub').onclick = function(){ submitText(); };
+}
+
+function submitText(){
+  if(S.locked) return;
+  var a = S.activity, p = a.prompts[S.index];
+  var ta = document.getElementById('ans');
+  var ans = ta.value;
+  if(!ans.trim()){ ta.focus(); return; }
+  S.tries++;
+  S.locked = true;
+
+  var res = evaluate(a, p, ans);
+
+  var finish = function(fb, ok){
+    S.locked = false;
+    logAttempt(p, S.tries, ans, fb, ok);
+    if(ok){ showCorrect(fb); }
+    else if(S.tries >= MAX_TRIES){ showOut(fb, p); }
+    else { showRevise(fb); updateTries(); }
+  };
+
+  if(res.ok){ S.score++; finish('', true); return; }
+  if(res.feedback){ finish(res.feedback, false); return; }
+
+  if(a.ai){
+    document.getElementById('fbox').innerHTML = '<div class="fb revise">Thinking…</div>';
+    aiHint(a,p,ans).then(function(h){ finish(h || a.fallback || 'Look at your sentence again.', false); });
+  } else {
+    finish(a.fallback || 'Look at your sentence again.', false);
+  }
+}
+
+function showCorrect(){
+  var cues = document.getElementById('cues');
+  if(cues){
+    cues.classList.add('merged');
+    var lis = cues.children;
+    for(var i=0;i<lis.length;i++){ lis[i].style.setProperty('--shift', String(i*10)); }
+  }
+  var ta = document.getElementById('ans'); if(ta) ta.disabled = true;
+  var p = S.activity.prompts[S.index];
+  var why = p.why ? '<div class="model">'+esc(p.why)+'</div>' : '';
+  document.getElementById('fbox').innerHTML =
+    '<div class="fb good"><b>That works.</b>'+ (p.praise ? esc(p.praise) : 'Strong sentence.') +'</div>' + why;
+  document.getElementById('sub').outerHTML = '<button id="nxt">Next</button>';
+  document.getElementById('nxt').onclick = next;
+  document.getElementById('nxt').focus();
+  var t = document.getElementById('tries'); if(t) t.textContent='';
+}
+function showRevise(fb){
+  document.getElementById('fbox').innerHTML =
+    '<div class="fb revise"><b>Try again.</b>'+esc(fb)+'</div>';
+}
+function showOut(fb, p){
+  var model = (p.optimal && p.optimal.length) ? p.optimal[0] : '';
+  document.getElementById('fbox').innerHTML =
+    '<div class="fb revise"><b>Let\'s look at it together.</b>'+esc(fb)+'</div>'
+    + (model ? '<div class="model">One good answer: <span>'+esc(model)+'</span> '+speakBtn(model)+'</div>' : '');
+  var ta = document.getElementById('ans'); if(ta) ta.disabled = true;
+  document.getElementById('sub').outerHTML = '<button id="nxt">Next</button>';
+  document.getElementById('nxt').onclick = next;
+  wireSpeak();
+  var t = document.getElementById('tries'); if(t) t.textContent='';
+}
+function updateTries(){
+  var el = document.getElementById('tries');
+  if(!el) return;
+  var left = MAX_TRIES - S.tries;
+  el.textContent = S.tries===0 ? '' : (left + ' tries left');
+}
+function next(){
+  S.index++; S.tries=0; S.picked=null; S.edits={};
+  render();
+}
+
+/* ---------- blank ---------- */
+function renderBlank(){
+  var a = S.activity, p = a.prompts[S.index];
+  var maxTries = p.options ? Math.min(MAX_TRIES, p.options.length-1) : MAX_TRIES;
+  p._max = maxTries;
+
+  var shown = p.text.replace('___','<span class="gap" id="gap">&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+  var opts='';
+  if(p.options){
+    for(var i=0;i<p.options.length;i++){
+      opts += '<button data-opt="'+esc(p.options[i])+'">'+esc(p.options[i])+'</button>';
+    }
+  }
+  app.innerHTML = chrome()
+    + '<p class="stem">'+shown+'</p><div style="height:6px"></div>'
+    + (p.options ? '<div class="opts" id="opts">'+opts+'</div>'
+                 : '<textarea id="ans" rows="2"></textarea><div class="row"><button id="sub">Check</button></div>')
+    + '<div id="fbox"></div>';
+  wireSpeak();
+
+  if(p.options){
+    var bs = document.querySelectorAll('#opts button');
+    for(var b=0;b<bs.length;b++){
+      bs[b].onclick = function(){ pickOption(this); };
+    }
+  } else {
+    document.getElementById('sub').onclick = function(){ submitBlankTyped(); };
+  }
+}
+function pickOption(btn){
+  if(S.locked) return;
+  var a = S.activity, p = a.prompts[S.index];
+  var val = btn.getAttribute('data-opt');
+  S.tries++;
+  var ok = normBare(val)===normBare(p.answer);
+  var gap = document.getElementById('gap');
+  if(gap) gap.textContent = val;
+
+  if(ok){
+    S.score++; S.locked = true;
+    btn.classList.add('picked');
+    logAttempt(p, S.tries, val, '', true);
+    document.getElementById('fbox').innerHTML =
+      '<div class="fb good"><b>Yes.</b>'+esc(p.why||'')+'</div>'
+      + '<div class="row"><button id="nxt">Next</button></div>';
+    document.getElementById('nxt').onclick = next;
+  } else {
+    var fb = (p.wrong && p.wrong[val]) ? p.wrong[val] : 'Not that one. Look at the subject.';
+    btn.classList.add('used'); btn.disabled = true;
+    logAttempt(p, S.tries, val, fb, false);
+    if(S.tries >= p._max){
+      S.locked = true;
+      if(gap) gap.textContent = p.answer;
+      document.getElementById('fbox').innerHTML =
+        '<div class="fb revise"><b>Let\'s look at it together.</b>'+esc(fb)+'</div>'
+        + '<div class="model">The answer is <span>'+esc(p.answer)+'</span>. '+esc(p.why||'')+'</div>'
+        + '<div class="row"><button id="nxt">Next</button></div>';
+      document.getElementById('nxt').onclick = next;
+    } else {
+      document.getElementById('fbox').innerHTML = '<div class="fb revise"><b>Try again.</b>'+esc(fb)+'</div>';
+    }
+  }
+}
+function submitBlankTyped(){
+  var a = S.activity, p = a.prompts[S.index];
+  var val = document.getElementById('ans').value.trim();
+  if(!val) return;
+  S.tries++;
+  var ok = normBare(val)===normBare(p.answer);
+  if(ok){
+    S.score++;
+    logAttempt(p, S.tries, val, '', true);
+    document.getElementById('fbox').innerHTML =
+      '<div class="fb good"><b>Yes.</b>'+esc(p.why||'')+'</div><div class="row"><button id="nxt">Next</button></div>';
+    document.getElementById('nxt').onclick = next;
+  } else {
+    var fb = (p.wrong && p.wrong[val]) ? p.wrong[val] : (p.why || 'Not yet. Look at the subject of the sentence.');
+    logAttempt(p, S.tries, val, fb, false);
+    if(S.tries>=MAX_TRIES){
+      document.getElementById('fbox').innerHTML =
+        '<div class="fb revise"><b>Let\'s look at it together.</b>'+esc(fb)+'</div>'
+        + '<div class="model">The answer is <span>'+esc(p.answer)+'</span>.</div>'
+        + '<div class="row"><button id="nxt">Next</button></div>';
+      document.getElementById('nxt').onclick = next;
+    } else {
+      document.getElementById('fbox').innerHTML = '<div class="fb revise"><b>Try again.</b>'+esc(fb)+'</div>';
+    }
+  }
+}
+
+/* ---------- proofread ---------- */
+function parseProof(passage){
+  var toks = [], re = /\[([^\|\]]+)\|([^\]]+)\]/g, last = 0, m;
+  function pushPlain(str){
+    var parts = str.split(/(\s+)/);
+    for(var i=0;i<parts.length;i++){
+      if(!parts[i]) continue;
+      if(/^\s+$/.test(parts[i])) { toks.push({space:true, text:parts[i]}); }
+      else toks.push({text:parts[i], correct:parts[i], isError:false});
+    }
+  }
+  while((m = re.exec(passage))!==null){
+    pushPlain(passage.slice(last, m.index));
+    toks.push({text:m[1], correct:m[2], isError:true});
+    last = re.lastIndex;
+  }
+  pushPlain(passage.slice(last));
+  return toks;
+}
+
+function renderProof(){
+  var a = S.activity, p = a.prompts[S.index];
+  var toks = parseProof(p.passage);
+  p._toks = toks;
+  S.edits = {};
+
+  var html='';
+  for(var i=0;i<toks.length;i++){
+    if(toks[i].space){ html += toks[i].text; continue; }
+    html += '<span class="tok" data-i="'+i+'">'+esc(toks[i].text)+'</span>';
+  }
+  app.innerHTML = chrome()
+    + '<div class="passage" id="pass">'+html+'</div>'
+    + '<div class="row"><button id="sub">Check my work</button>'
+    + '<span class="tries">Tap a word to change it.</span></div>'
+    + '<div id="fbox"></div>';
+  wireSpeak();
+
+  var spans = document.querySelectorAll('#pass .tok');
+  for(var s=0;s<spans.length;s++){ spans[s].onclick = function(){ editTok(this); }; }
+  document.getElementById('sub').onclick = submitProof;
+}
+function editTok(span){
+  if(S.locked || span.querySelector('input')) return;
+  var i = span.getAttribute('data-i');
+  var cur = S.edits[i]!==undefined ? S.edits[i] : S.activity.prompts[S.index]._toks[i].text;
+  span.innerHTML = '<input type="text" value="'+esc(cur)+'">';
+  var inp = span.querySelector('input');
+  inp.style.width = Math.max(70, cur.length*13) + 'px';
+  inp.focus(); inp.select();
+  var commit = function(){
+    var v = inp.value.trim();
+    var orig = S.activity.prompts[S.index]._toks[i].text;
+    span.innerHTML = esc(v||orig);
+    if(v && v!==orig){ S.edits[i]=v; span.classList.add('edited'); }
+    else { delete S.edits[i]; span.classList.remove('edited'); }
+    span.onclick = function(){ editTok(this); };
+  };
+  inp.onblur = commit;
+  inp.onkeydown = function(e){ if(e.key==='Enter'){ e.preventDefault(); inp.blur(); } };
+}
+function submitProof(){
+  if(S.locked) return;
+  S.locked = true;
+  var a = S.activity, p = a.prompts[S.index], toks = p._toks;
+  var fixed=0, missed=0, over=0;
+
+  for(var i=0;i<toks.length;i++){
+    if(toks[i].space) continue;
+    var span = document.querySelector('#pass .tok[data-i="'+i+'"]');
+    var given = S.edits[i]!==undefined ? S.edits[i] : toks[i].text;
+    var skill = (p.skills && p.skills[toks[i].correct]) ? p.skills[toks[i].correct] : (a.skill||null);
+
+    if(toks[i].isError){
+      if(normBare(given)===normBare(toks[i].correct)){
+        fixed++; S.score++;
+        logAttempt({id:p.id+'-'+i, skill:skill}, 1, given, '', true);
+      } else {
+        missed++;
+        span.classList.remove('edited'); span.classList.add('missed');
+        span.textContent = toks[i].correct;
+        logAttempt({id:p.id+'-'+i, skill:skill}, 1, given, 'Missed: should be '+toks[i].correct, false);
+      }
+    } else if(S.edits[i]!==undefined){
+      over++;
+      span.classList.remove('edited'); span.classList.add('overcorrect');
+      span.textContent = toks[i].text;
+      logAttempt({id:p.id+'-'+i, skill:skill}, 1, given, 'This word was already correct.', false);
+    }
+  }
+
+  var msg = 'You fixed ' + fixed + ' of ' + (fixed+missed) + '.';
+  if(missed) msg += ' The orange words are the ones you missed.';
+  if(over)   msg += ' The purple words were already correct.';
+  document.getElementById('fbox').innerHTML =
+    '<div class="fb '+(missed||over?'revise':'good')+'"><b>'+(missed||over?'Here is what to look at.':'All correct.')+'</b>'+esc(msg)+'</div>'
+    + '<div class="row"><button id="nxt">Next</button></div>';
+  document.getElementById('nxt').onclick = function(){ S.locked=false; next(); };
+}
+
+/* ============================================================
+   SCREEN 3 — student report
+   ============================================================ */
+function screenReport(){
+  var r = endSession();
+  var a = S.activity;
+  var bandWord = r.band==='green' ? 'You know this' : (r.band==='yellow' ? 'Almost there' : 'Keep practicing');
+
+  var recap = '';
+  var seen = {};
+  for(var i=0;i<S.log.length;i++){
+    var l = S.log[i];
+    if(!l.ok && seen[l.prompt.id]!=='ok') seen[l.prompt.id]='no';
+    if(l.ok) seen[l.prompt.id]='ok';
+  }
+  var last = {};
+  for(var j=0;j<S.log.length;j++){ last[S.log[j].prompt.id] = S.log[j]; }
+  for(var k in last){
+    var e = last[k];
+    recap += '<div>'+(seen[k]==='ok'?'&#10003; ':'&#8226; ')+esc(e.response)
+           + (e.feedback ? '<small>'+esc(e.feedback)+'</small>' : '')+'</div>';
+  }
+
+  app.innerHTML =
+    '<div class="bar"><h1>'+esc(a.title)+'</h1><span class="who">'+esc(S.student)+'</span></div>'
+    + '<div class="card">'
+    + '<div class="big">'+r.pct+'%</div>'
+    + '<p style="margin:10px 0 0"><span class="band '+r.band+'">'+bandWord+'</span></p>'
+    + '<p style="color:var(--muted);margin:14px 0 0">You got '+S.score+' out of '+S.total+'.'
+    + (S.replay>1 ? ' This was try number '+S.replay+'.' : '')+'</p>'
+    + '<div class="recap">'+recap+'</div>'
+    + '<div class="row" style="margin-top:24px">'
+    + '<button id="again">Try this again</button>'
+    + '<button class="ghost" id="home">Pick another activity</button>'
+    + '</div></div>';
+
+  document.getElementById('again').onclick = function(){
+    S.index=0; S.tries=0; S.score=0; S.log=[]; S.locked=false; S.edits={};
+    startSession(); render();
+  };
+  document.getElementById('home').onclick = function(){ location.href = 'index.html'; };
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+screenLogin();
+</script>
+</body>
+</html>
