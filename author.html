@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentence Lab — Build activities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#16232B;--paper:#EDF0EF;--surface:#fff;--line:#D2D9D7;--muted:#5F706C;
+  --teal:#1B6B58;--ember:#A9491A;--soft:#F6F8F7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:'Atkinson Hyperlegible',system-ui,sans-serif;font-size:15px;line-height:1.5}
+.top{background:var(--ink);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.top h1{font-size:16px;margin:0}
+.top .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.top .status{font-size:13px;color:#9FB0AC}
+
+.layout{display:grid;grid-template-columns:270px 1fr;gap:20px;max-width:1250px;margin:0 auto;padding:20px}
+@media(max-width:860px){.layout{grid-template-columns:1fr}}
+
+.side{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;align-self:start;position:sticky;top:70px}
+.side h3{font-size:12px;color:var(--muted);margin:10px 6px 6px;font-weight:400}
+.side a{display:block;padding:8px 10px;border-radius:5px;text-decoration:none;color:inherit;font-size:14px;cursor:pointer}
+.side a:hover{background:var(--soft)}
+.side a.on{background:var(--ink);color:#fff;font-weight:700}
+.side a small{display:block;font-size:12px;opacity:.7}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:22px;margin-bottom:16px}
+.panel h2{font-size:16px;margin:0 0 3px}
+.panel .hint{color:var(--muted);font-size:13px;margin:0 0 18px;max-width:66ch}
+
+label{display:block;font-size:12px;color:var(--muted);margin:14px 0 4px}
+input[type=text],textarea,select,input[type=password],input[type=number]{
+  width:100%;font:inherit;font-size:15px;padding:8px 10px;border:1.5px solid var(--line);
+  border-radius:5px;background:#fff;color:var(--ink)}
+textarea{min-height:66px;resize:vertical}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:3px solid #2F6FA8;outline-offset:1px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:700px){.grid2,.grid3{grid-template-columns:1fr}}
+.check{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14px}
+.check input{width:auto}
+
+button{font:inherit;border:0;border-radius:5px;padding:8px 15px;background:var(--ink);color:#fff;cursor:pointer;font-weight:700}
+button.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line);font-weight:400}
+button.tiny{padding:4px 9px;font-size:13px;font-weight:400;background:#fff;color:var(--muted);border:1.5px solid var(--line)}
+button.danger{background:#fff;color:var(--ember);border:1.5px solid #E6C9BA;font-weight:400}
+.rowline{display:flex;gap:8px;align-items:center;margin-bottom:7px}
+.rowline input{flex:1}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+
+.q{border:1px solid var(--line);border-radius:6px;margin-bottom:12px;background:#fff}
+.q>header{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--soft);border-radius:6px 6px 0 0;cursor:pointer}
+.q>header b{font-size:14px}
+.q>header .sp{margin-left:auto;display:flex;gap:6px}
+.q .body{padding:16px;border-top:1px solid var(--line)}
+.q.closed .body{display:none}
+
+.rule{display:grid;grid-template-columns:190px 150px 1fr auto;gap:8px;margin-bottom:8px;align-items:start}
+@media(max-width:820px){.rule{grid-template-columns:1fr}}
+
+.marktools{display:flex;gap:8px;align-items:center;margin:8px 0 6px;flex-wrap:wrap}
+.pv{background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:12px;font-size:16px;line-height:1.9;margin-top:10px}
+.pv mark{background:#FBE6D8;border-bottom:2px solid var(--ember);padding:1px 3px;border-radius:3px}
+.pv mark b{color:var(--teal)}
+
+.gate{max-width:340px;margin:110px auto;background:#fff;border:1px solid var(--line);border-radius:6px;padding:26px}
+.note{background:#FFF8E8;border:1px solid #E8D9A8;border-radius:5px;padding:10px 13px;font-size:13px;margin:14px 0}
+.trans{display:grid;grid-template-columns:56px 1fr;gap:8px;align-items:center;margin-bottom:6px}
+.trans span{font-size:12px;color:var(--muted)}
+.empty{color:var(--muted);padding:36px;text-align:center;border:1px dashed var(--line);border-radius:6px;background:#fff}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="content.js"></script>
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+var SUPA_URL='https://lhmwtfyceilgndpygivj.supabase.co';
+var SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxobXd0ZnljZWlsZ25kcHlnaXZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzk5MDIsImV4cCI6MjA5MTcxNTkwMn0.0uIXyctHMfTN4doWYn2JJ260swD5b-t0T-oDMSIPtBU';
+var PASSWORD='galileo2026';
+var META_ID='__meta__';
+
+var TOOLS={
+  combine:'Put sentences together',
+  write:'Rewrite a sentence',
+  blank:'Fill the gap',
+  proof:'Find the mistakes'
+};
+var LANGS={es:'Español',zh:'中文',vi:'Tiếng Việt',ar:'العربية',tl:'Tagalog',pt:'Português',ru:'Русский',ja:'日本語',ko:'한국어',fr:'Français',ne:'नेपाली'};
+
+var DOC={meta:{title:'Sentence Lab',subtitle:'Galileo ELD',languages:['es','zh','vi','ar','tl','pt','ne']},skills:{},activities:[]};
+var SEL=null;         /* selected activity id, or '__skills__' */
+var DIRTY=false;
+var root=document.getElementById('root');
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function hdr(extra){var h={apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json'};
+  if(extra) for(var k in extra) h[k]=extra[k]; return h;}
+function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40);}
+function uid(prefix){
+  var base=prefix||'act', n=1, ids={};
+  DOC.activities.forEach(function(a){ids[a.id]=1;});
+  while(ids[base+'-'+n]) n++;
+  return base+'-'+n;
+}
+function rxEscape(s){return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}
+function setStatus(t){var e=document.getElementById('st'); if(e) e.textContent=t;}
+function markDirty(){DIRTY=true;setStatus('unsaved changes');}
+
+/* ============================================================
+   LOAD / SAVE
+   ============================================================ */
+function loadAll(){
+  setStatus('loading…');
+  return fetch(SUPA_URL+'/rest/v1/qf_activities?select=*',{headers:hdr()})
+    .then(function(r){return r.json();})
+    .then(function(rows){
+      if(!Array.isArray(rows)) rows=[];
+      var meta=null, acts=[];
+      rows.forEach(function(r){
+        if(r.id===META_ID){ meta=r.payload; }
+        else if(r.payload){ acts.push(r.payload); }
+      });
+      if(meta){
+        DOC.meta = meta.meta || DOC.meta;
+        DOC.skills = meta.skills || {};
+        if(meta.order){
+          var byId={}; acts.forEach(function(a){byId[a.id]=a;});
+          var sorted=[]; meta.order.forEach(function(id){ if(byId[id]){sorted.push(byId[id]); delete byId[id];} });
+          Object.keys(byId).forEach(function(k){sorted.push(byId[k]);});
+          acts=sorted;
+        }
+      }
+      DOC.activities=acts;
+      if(!acts.length && !meta){ seedFromFile(); return 'seeded'; }
+      DIRTY=false; setStatus('loaded from Supabase');
+      return 'ok';
+    })
+    .catch(function(e){
+      console.warn(e);
+      seedFromFile();
+      setStatus('could not reach Supabase — showing content.js');
+      return 'offline';
+    });
+}
+function seedFromFile(){
+  if(!window.QF_CONTENT) return;
+  DOC.meta=JSON.parse(JSON.stringify(QF_CONTENT.meta||DOC.meta));
+  DOC.skills=JSON.parse(JSON.stringify(QF_CONTENT.skills||{}));
+  DOC.activities=JSON.parse(JSON.stringify(QF_CONTENT.activities||[]));
+  DIRTY=true;
+}
+
+function saveAll(){
+  setStatus('saving…');
+  var rows=DOC.activities.map(function(a){
+    return {id:a.id,title:a.title,tool:a.tool,skill:a.skill||null,standard:a.standard||null,
+            level:a.level||null,payload:a,published:a.published!==false,updated_at:new Date().toISOString()};
+  });
+  rows.push({id:META_ID,title:'meta',tool:'meta',payload:{meta:DOC.meta,skills:DOC.skills,
+    order:DOC.activities.map(function(a){return a.id;})},published:false,updated_at:new Date().toISOString()});
+
+  return fetch(SUPA_URL+'/rest/v1/qf_activities',{
+    method:'POST',
+    headers:hdr({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+    body:JSON.stringify(rows)
+  }).then(function(r){
+    if(!r.ok) return r.text().then(function(t){ throw new Error(t); });
+    DIRTY=false; setStatus('saved · students see it now');
+  }).catch(function(e){
+    setStatus('save failed');
+    alert('Save failed.\n\n'+e.message+'\n\nIf this says the table is missing, run schema.sql in the Supabase SQL editor first.');
+  });
+}
+function deleteRemote(id){
+  return fetch(SUPA_URL+'/rest/v1/qf_activities?id=eq.'+encodeURIComponent(id),
+    {method:'DELETE',headers:hdr()}).catch(function(){});
+}
+
+/* ============================================================
+   BLANK ACTIVITY / PROMPT TEMPLATES
+   ============================================================ */
+function newActivity(tool){
+  var a={id:uid(tool.slice(0,3)),title:'Untitled activity',tool:tool,level:'Newcomer',
+    skill:Object.keys(DOC.skills)[0]||'',standard:'',mechanics:tool==='combine'||tool==='write',
+    ai:false,fallback:'Read your sentence out loud one more time.',
+    directions:{text:'',t:{}},prompts:[],published:true};
+  a.prompts.push(newPrompt(a,1));
+  return a;
+}
+function newPrompt(a,n){
+  var id='p'+n;
+  if(a.tool==='combine') return {id:id,skill:a.skill,cues:['',''],optimal:[''],rules:[]};
+  if(a.tool==='write')   return {id:id,skill:a.skill,stem:'',hint:'',optimal:[''],rules:[]};
+  if(a.tool==='blank')   return {id:id,skill:a.skill,text:'',options:['','',''],answer:'',why:'',wrong:{}};
+  return {id:id,skill:a.skill,passage:'',skills:{}};
+}
+function nextPromptId(a){
+  var n=1,ids={};(a.prompts||[]).forEach(function(p){ids[p.id]=1;});
+  while(ids['p'+n]) n++; return 'p'+n;
+}
+
+/* ============================================================
+   GATE
+   ============================================================ */
+function gate(){
+  root.innerHTML='<div class="gate"><h2 style="margin:0 0 4px;font-size:17px">Build activities</h2>'
+    +'<p style="color:var(--muted);font-size:13px;margin:0 0 14px">Teacher access.</p>'
+    +'<input type="password" id="pw" placeholder="Password">'
+    +'<div style="margin-top:14px"><button id="in">Open</button></div></div>';
+  var go=function(){
+    if(document.getElementById('pw').value===PASSWORD){sessionStorage.setItem('qf_a','1');boot();}
+    else{document.getElementById('pw').value='';document.getElementById('pw').focus();}
+  };
+  document.getElementById('in').onclick=go;
+  document.getElementById('pw').onkeydown=function(e){if(e.key==='Enter')go();};
+  document.getElementById('pw').focus();
+}
+function boot(){
+  root.innerHTML='<div class="empty">Loading…</div>';
+  loadAll().then(function(){
+    if(!SEL) SEL=DOC.activities.length?DOC.activities[0].id:null;
+    render();
+  });
+}
+
+/* ============================================================
+   SHELL
+   ============================================================ */
+function shell(inner){
+  var side='';
+  Object.keys(TOOLS).forEach(function(t){
+    var acts=DOC.activities.filter(function(a){return a.tool===t;});
+    if(!acts.length) return;
+    side+='<h3>'+esc(TOOLS[t])+'</h3>';
+    acts.forEach(function(a){
+      side+='<a data-go="'+esc(a.id)+'" class="'+(a.id===SEL?'on':'')+'">'+esc(a.title||a.id)
+        +'<small>'+a.prompts.length+' question'+(a.prompts.length===1?'':'s')
+        +(a.published===false?' · hidden':'')+'</small></a>';
+    });
+  });
+  if(!DOC.activities.length) side='<p style="color:var(--muted);font-size:13px;padding:8px">No activities yet.</p>';
+  side+='<h3>Setup</h3><a data-go="__skills__" class="'+(SEL==='__skills__'?'on':'')+'">Skill names and languages</a>';
+
+  root.innerHTML=
+    '<div class="top"><h1>Build activities</h1><span class="status" id="st"></span>'
+    +'<div class="right">'
+    +'<button id="save">Save</button>'
+    +'<button class="ghost" id="dl">Download content.js</button>'
+    +'<a href="dashboard.html" style="color:#9FB0AC;font-size:13px;text-decoration:none;margin-left:6px">Reports</a>'
+    +'</div></div>'
+    +'<div class="layout"><div class="side">'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'
+    +'<select id="newtool" style="flex:1"><option value="">New activity…</option>'
+    +Object.keys(TOOLS).map(function(t){return '<option value="'+t+'">'+esc(TOOLS[t])+'</option>';}).join('')
+    +'</select></div>'
+    +side+'</div><div>'+inner+'</div></div>';
+
+  var links=root.querySelectorAll('[data-go]');
+  for(var i=0;i<links.length;i++){
+    links[i].onclick=function(){SEL=this.getAttribute('data-go');render();};
+  }
+  document.getElementById('save').onclick=saveAll;
+  document.getElementById('dl').onclick=downloadFile;
+  document.getElementById('newtool').onchange=function(){
+    if(!this.value) return;
+    var a=newActivity(this.value);
+    DOC.activities.push(a); SEL=a.id; markDirty(); render();
+  };
+  setStatus(DIRTY?'unsaved changes':'saved');
+}
+
+function render(){
+  if(SEL==='__skills__') return renderSettings();
+  var a=DOC.activities.filter(function(x){return x.id===SEL;})[0];
+  if(!a){ return shell('<div class="empty">Pick an activity on the left, or make a new one.</div>'); }
+  renderActivity(a);
+}
+
+/* ============================================================
+   SETTINGS — skill names + languages
+   ============================================================ */
+function renderSettings(){
+  var rows='';
+  Object.keys(DOC.skills).forEach(function(k){
+    rows+='<div class="rowline"><input type="text" value="'+esc(k)+'" data-sk="'+esc(k)+'" data-f="key" placeholder="key">'
+      +'<input type="text" value="'+esc(DOC.skills[k])+'" data-sk="'+esc(k)+'" data-f="label" placeholder="What you call it">'
+      +'<button class="danger tiny" data-delsk="'+esc(k)+'">Delete</button></div>';
+  });
+  var langs='';
+  Object.keys(LANGS).forEach(function(c){
+    var on=(DOC.meta.languages||[]).indexOf(c)>-1;
+    langs+='<label class="check" style="margin:0"><input type="checkbox" data-lang="'+c+'"'+(on?' checked':'')+'> '+esc(LANGS[c])+'</label>';
+  });
+
+  shell('<div class="panel"><h2>Skill names</h2>'
+    +'<p class="hint">The key on the left is what gets stored with every attempt, so the reports can group by it. The name on the right is what you read in the reports. Change a key only if no student has practiced it yet.</p>'
+    +rows
+    +'<div style="margin-top:10px"><button class="tiny" id="addsk">Add a skill</button></div>'
+    +'</div>'
+    +'<div class="panel"><h2>Translation languages</h2>'
+    +'<p class="hint">These appear in the sign-in dropdown, and give you a translation box under every set of directions.</p>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px">'+langs+'</div>'
+    +'</div>'
+    +'<div class="panel"><h2>Site name</h2>'
+    +'<div class="grid2"><div><label>Title</label><input type="text" id="mt" value="'+esc(DOC.meta.title||'')+'"></div>'
+    +'<div><label>Subtitle</label><input type="text" id="ms" value="'+esc(DOC.meta.subtitle||'')+'"></div></div>'
+    +'</div>');
+
+  var sks=root.querySelectorAll('[data-sk]');
+  for(var i=0;i<sks.length;i++){
+    sks[i].onchange=function(){
+      var old=this.getAttribute('data-sk'), f=this.getAttribute('data-f');
+      if(f==='label'){ DOC.skills[old]=this.value; }
+      else{
+        var nk=slug(this.value)||old;
+        if(nk!==old){ DOC.skills[nk]=DOC.skills[old]; delete DOC.skills[old];
+          DOC.activities.forEach(function(a){
+            if(a.skill===old) a.skill=nk;
+            (a.prompts||[]).forEach(function(p){ if(p.skill===old) p.skill=nk; });
+          });
+        }
+      }
+      markDirty(); render();
+    };
+  }
+  var dels=root.querySelectorAll('[data-delsk]');
+  for(var d=0;d<dels.length;d++){
+    dels[d].onclick=function(){
+      var k=this.getAttribute('data-delsk');
+      if(confirm('Delete the skill "'+(DOC.skills[k]||k)+'"? Past student data keeps the old key.')){
+        delete DOC.skills[k]; markDirty(); render();
+      }
+    };
+  }
+  document.getElementById('addsk').onclick=function(){
+    var n=prompt('What do you call this skill? For example: Joining with so');
+    if(!n) return;
+    var k=slug(n); DOC.skills[k]=n; markDirty(); render();
+  };
+  var lgs=root.querySelectorAll('[data-lang]');
+  for(var L=0;L<lgs.length;L++){
+    lgs[L].onchange=function(){
+      var c=this.getAttribute('data-lang');
+      DOC.meta.languages=DOC.meta.languages||[];
+      var i=DOC.meta.languages.indexOf(c);
+      if(this.checked && i<0) DOC.meta.languages.push(c);
+      if(!this.checked && i>-1) DOC.meta.languages.splice(i,1);
+      markDirty();
+    };
+  }
+  document.getElementById('mt').oninput=function(){DOC.meta.title=this.value;markDirty();};
+  document.getElementById('ms').oninput=function(){DOC.meta.subtitle=this.value;markDirty();};
+}
+
+/* ============================================================
+   ACTIVITY EDITOR
+   ============================================================ */
+function skillOptions(sel){
+  var o='<option value="">— pick a skill —</option>';
+  Object.keys(DOC.skills).forEach(function(k){
+    o+='<option value="'+esc(k)+'"'+(k===sel?' selected':'')+'>'+esc(DOC.skills[k])+'</option>';
+  });
+  return o;
+}
+
+function renderActivity(a){
+  var trans='';
+  (DOC.meta.languages||[]).forEach(function(c){
+    var v=(a.directions&&a.directions.t&&a.directions.t[c])||'';
+    trans+='<div class="trans"><span>'+esc(LANGS[c]||c)+'</span>'
+      +'<input type="text" data-tr="'+c+'" value="'+esc(v)+'"></div>';
+  });
+
+  var qs='';
+  (a.prompts||[]).forEach(function(p,i){ qs+=promptCard(a,p,i); });
+
+  var head='<div class="panel">'
+    +'<h2>'+esc(TOOLS[a.tool])+'</h2>'
+    +'<p class="hint">'+toolBlurb(a.tool)+'</p>'
+    +'<div class="grid2">'
+    +'<div><label>Title students see</label><input type="text" id="f_title" value="'+esc(a.title||'')+'"></div>'
+    +'<div><label>Level</label><input type="text" id="f_level" value="'+esc(a.level||'')+'"></div>'
+    +'</div>'
+    +'<div class="grid3">'
+    +'<div><label>Main skill</label><select id="f_skill">'+skillOptions(a.skill)+'</select></div>'
+    +'<div><label>Standard</label><input type="text" id="f_std" value="'+esc(a.standard||'')+'"></div>'
+    +'<div><label>Web address name</label><input type="text" id="f_id" value="'+esc(a.id)+'"></div>'
+    +'</div>'
+    +'<label>Directions</label><input type="text" id="f_dir" value="'+esc((a.directions&&a.directions.text)||'')+'">'
+    +(trans?'<label>Directions in other languages</label>'+trans:'')
+    +(a.tool==='combine'||a.tool==='write'
+      ? '<label>What to say when nothing else fits</label><input type="text" id="f_fb" value="'+esc(a.fallback||'')+'">'
+        +'<div class="grid2">'
+        +'<label class="check"><input type="checkbox" id="f_mech"'+(a.mechanics?' checked':'')+'> Check capital letters and end punctuation</label>'
+        +'<label class="check"><input type="checkbox" id="f_ai"'+(a.ai?' checked':'')+'> Let Claude write a hint when no rule fits</label>'
+        +'</div>'
+      : '')
+    +'<label class="check"><input type="checkbox" id="f_pub"'+(a.published!==false?' checked':'')+'> Students can see this activity</label>'
+    +'<div class="actions">'
+    +'<button id="preview">Try it as a student</button>'
+    +'<button class="ghost" id="dupe">Make a copy</button>'
+    +'<button class="danger" id="delact">Delete this activity</button>'
+    +'</div></div>';
+
+  var qsPanel='<div class="panel"><h2>Questions</h2>'
+    +'<p class="hint">Click a question to open it. Drag is not supported — use the arrows to reorder.</p>'
+    +(qs||'<div class="empty" style="padding:22px">No questions yet.</div>')
+    +'<div style="margin-top:12px"><button id="addq">Add a question</button></div></div>';
+
+  shell(head+qsPanel);
+  wireActivity(a);
+}
+
+function toolBlurb(t){
+  if(t==='combine') return 'Students see two or more short sentences and fuse them into one. Give the answers you would accept, then write rules for the wrong turns you expect.';
+  if(t==='write')   return 'Students rewrite one sentence to use a target structure.';
+  if(t==='blank')   return 'Students fill a gap. Give three or four choices and say why each wrong one is wrong.';
+  return 'Students find and fix errors in a passage. Type the passage with the mistakes in it, then mark each mistake and give the correction.';
+}
+
+function wireActivity(a){
+  var on=function(id,ev,fn){var e=document.getElementById(id); if(e) e[ev]=fn;};
+  on('f_title','oninput',function(){a.title=this.value;markDirty();
+    var link=root.querySelector('.side a.on'); if(link) link.firstChild.nodeValue=this.value;});
+  on('f_level','oninput',function(){a.level=this.value;markDirty();});
+  on('f_skill','onchange',function(){
+    var old=a.skill; a.skill=this.value;
+    (a.prompts||[]).forEach(function(p){ if(!p.skill||p.skill===old) p.skill=a.skill; });
+    markDirty();
+  });
+  on('f_std','oninput',function(){a.standard=this.value;markDirty();});
+  on('f_id','onchange',function(){
+    var nid=slug(this.value);
+    if(!nid){ this.value=a.id; return; }
+    if(DOC.activities.some(function(x){return x!==a && x.id===nid;})){ alert('Another activity already uses that name.'); this.value=a.id; return; }
+    var old=a.id; a.id=nid; SEL=nid;
+    deleteRemote(old);
+    markDirty(); render();
+  });
+  on('f_dir','oninput',function(){a.directions=a.directions||{t:{}};a.directions.text=this.value;markDirty();});
+  on('f_fb','oninput',function(){a.fallback=this.value;markDirty();});
+  on('f_mech','onchange',function(){a.mechanics=this.checked;markDirty();});
+  on('f_ai','onchange',function(){a.ai=this.checked;markDirty();});
+  on('f_pub','onchange',function(){a.published=this.checked;markDirty();render();});
+
+  var trs=root.querySelectorAll('[data-tr]');
+  for(var i=0;i<trs.length;i++){
+    trs[i].oninput=function(){
+      a.directions=a.directions||{text:'',t:{}}; a.directions.t=a.directions.t||{};
+      a.directions.t[this.getAttribute('data-tr')]=this.value; markDirty();
+    };
+  }
+
+  on('preview','onclick',function(){
+    if(DIRTY){ saveAll().then(function(){ window.open('play.html?a='+encodeURIComponent(a.id),'_blank'); }); }
+    else window.open('play.html?a='+encodeURIComponent(a.id),'_blank');
+  });
+  on('dupe','onclick',function(){
+    var c=JSON.parse(JSON.stringify(a));
+    c.id=uid(a.tool.slice(0,3)); c.title=a.title+' (copy)';
+    DOC.activities.push(c); SEL=c.id; markDirty(); render();
+  });
+  on('delact','onclick',function(){
+    if(!confirm('Delete "'+a.title+'"? Student results already recorded are not deleted.')) return;
+    deleteRemote(a.id);
+    DOC.activities=DOC.activities.filter(function(x){return x!==a;});
+    SEL=DOC.activities.length?DOC.activities[0].id:null;
+    markDirty(); render();
+  });
+  on('addq','onclick',function(){
+    a.prompts.push(newPrompt(a,0));
+    a.prompts[a.prompts.length-1].id=nextPromptId(a);
+    markDirty(); render();
+  });
+
+  wirePrompts(a);
+}
+
+/* ============================================================
+   PROMPT CARDS
+   ============================================================ */
+function promptCard(a,p,i){
+  var label='';
+  if(a.tool==='combine') label=(p.cues&&p.cues[0])||'(empty)';
+  else if(a.tool==='write') label=p.stem||'(empty)';
+  else if(a.tool==='blank') label=p.text||'(empty)';
+  else label=(p.passage||'(empty)').replace(/\[([^\|\]]+)\|[^\]]+\]/g,'$1').slice(0,60);
+
+  var open=(p._open!==false);
+  var body='';
+  if(a.tool==='combine') body=bodyCombine(a,p,i);
+  else if(a.tool==='write') body=bodyWrite(a,p,i);
+  else if(a.tool==='blank') body=bodyBlank(a,p,i);
+  else body=bodyProof(a,p,i);
+
+  return '<div class="q '+(open?'':'closed')+'" data-qi="'+i+'">'
+    +'<header data-toggle="'+i+'"><b>'+(i+1)+'.</b> <span style="flex:1">'+esc(label.slice(0,70))+'</span>'
+    +'<span class="sp">'
+    +'<button class="tiny" data-up="'+i+'">↑</button>'
+    +'<button class="tiny" data-down="'+i+'">↓</button>'
+    +'<button class="danger tiny" data-delq="'+i+'">Delete</button>'
+    +'</span></header>'
+    +'<div class="body">'+body+'</div></div>';
+}
+
+function lineList(i,field,arr,ph){
+  var out='';
+  (arr||[]).forEach(function(v,j){
+    out+='<div class="rowline"><input type="text" placeholder="'+esc(ph)+'" value="'+esc(v)+'" data-q="'+i+'" data-list="'+field+'" data-j="'+j+'">'
+      +'<button class="danger tiny" data-rml="'+field+'" data-q="'+i+'" data-j="'+j+'">×</button></div>';
+  });
+  out+='<button class="tiny" data-addl="'+field+'" data-q="'+i+'">Add another</button>';
+  return out;
+}
+
+var RULE_MODES=[
+  ['word_in','the answer uses the word'],
+  ['word_out','the answer is missing the word'],
+  ['text_in','the answer matches the pattern'],
+  ['text_out','the answer does not match'],
+  ['short','the answer is shorter than'],
+  ['copied','the answer just copies a sentence']
+];
+function ruleMode(r){
+  if(r._mode) return r._mode;
+  if(r.when==='shorter') return 'short';
+  if(r.when==='same') return 'copied';
+  /* Only call it a plain word if the pattern is \b...\b with nothing
+     regex-ish inside. Anything fancier stays a pattern, so re-saving
+     it does not mangle the escapes. */
+  var m=String(r.pattern||'').match(/^\\b([^\\]*)\\b$/);
+  var plain = !!m && !/[.*+?^${}()|[\]]/.test(m[1]);
+  if(r.when==='contains') return plain?'word_in':'text_in';
+  return plain?'word_out':'text_out';
+}
+function ruleValue(r){
+  if(r._value!=null) return r._value;
+  if(r.when==='shorter') return r.than||'';
+  if(r.when==='same') return '';
+  var mode=ruleMode(r), p=String(r.pattern||'');
+  if(mode==='word_in'||mode==='word_out') return p.replace(/^\\b/,'').replace(/\\b$/,'');
+  return p;
+}
+function rulesBlock(i,rules){
+  var out='';
+  (rules||[]).forEach(function(r,j){
+    var mode=ruleMode(r), val=ruleValue(r);
+    var sel=RULE_MODES.map(function(m){return '<option value="'+m[0]+'"'+(m[0]===mode?' selected':'')+'>'+m[1]+'</option>';}).join('');
+    out+='<div class="rule">'
+      +'<select data-q="'+i+'" data-rj="'+j+'" data-rf="mode">'+sel+'</select>'
+      +'<input type="text" placeholder="'+(mode==='short'?'number of words':'word or pattern')+'" value="'+esc(val)+'" data-q="'+i+'" data-rj="'+j+'" data-rf="value"'+(mode==='copied'?' disabled':'')+'>'
+      +'<input type="text" placeholder="What the student is told" value="'+esc(r.feedback||'')+'" data-q="'+i+'" data-rj="'+j+'" data-rf="fb">'
+      +'<button class="danger tiny" data-rmr="'+j+'" data-q="'+i+'">×</button>'
+      +'</div>';
+  });
+  out+='<button class="tiny" data-addr="'+i+'">Add a rule</button>';
+  return '<label>Rules, in order — the first one that fits is the only thing the student sees</label>'
+    +'<p class="hint" style="margin:0 0 8px">Put the biggest problem first. You do not need one for every wrong answer; punctuation, capitals and exact matches are handled for you.</p>'+out;
+}
+
+function bodyCombine(a,p,i){
+  return '<label>Sentences the student sees, one per line</label>'+lineList(i,'cues',p.cues,'Marisol was tired.')
+    +'<label style="margin-top:16px">Answers you would accept</label>'
+    +'<p class="hint" style="margin:0 0 8px">Include the versions students really write. Capitals and end punctuation are checked separately, so you do not need duplicates for those.</p>'
+    +lineList(i,'optimal',p.optimal,'Marisol was tired because she worked all night.')
+    +'<div style="margin-top:16px">'+rulesBlock(i,p.rules)+'</div>'
+    +'<div class="grid2" style="margin-top:16px"><div><label>Skill for this question</label><select data-q="'+i+'" data-pf="skill">'+skillOptions(p.skill||a.skill)+'</select></div>'
+    +'<div><label>What to say when they get it</label><input type="text" data-q="'+i+'" data-pf="why" value="'+esc(p.why||'')+'" placeholder="Because tells why she was tired."></div></div>';
+}
+function bodyWrite(a,p,i){
+  return '<div class="grid2"><div><label>Sentence to rewrite</label><input type="text" data-q="'+i+'" data-pf="stem" value="'+esc(p.stem||'')+'" placeholder="I walk to school."></div>'
+    +'<div><label>Nudge under it</label><input type="text" data-q="'+i+'" data-pf="hint" value="'+esc(p.hint||'')+'" placeholder="Yesterday, ..."></div></div>'
+    +'<label style="margin-top:16px">Answers you would accept</label>'+lineList(i,'optimal',p.optimal,'I walked to school.')
+    +'<div style="margin-top:16px">'+rulesBlock(i,p.rules)+'</div>'
+    +'<div class="grid2" style="margin-top:16px"><div><label>Skill for this question</label><select data-q="'+i+'" data-pf="skill">'+skillOptions(p.skill||a.skill)+'</select></div>'
+    +'<div><label>What to say when they get it</label><input type="text" data-q="'+i+'" data-pf="why" value="'+esc(p.why||'')+'"></div></div>';
+}
+function bodyBlank(a,p,i){
+  var wrongRows='';
+  (p.options||[]).forEach(function(o){
+    if(!o || o===p.answer) return;
+    wrongRows+='<div class="trans"><span style="font-weight:700;color:var(--ink)">'+esc(o)+'</span>'
+      +'<input type="text" data-q="'+i+'" data-wrong="'+esc(o)+'" value="'+esc((p.wrong&&p.wrong[o])||'')+'" placeholder="Why this one is not right"></div>';
+  });
+  var ansOpts='<option value="">— pick the right answer —</option>'
+    +(p.options||[]).filter(function(o){return o;}).map(function(o){
+      return '<option value="'+esc(o)+'"'+(o===p.answer?' selected':'')+'>'+esc(o)+'</option>';}).join('');
+
+  return '<label>Sentence — type ___ where the gap goes</label>'
+    +'<input type="text" data-q="'+i+'" data-pf="text" value="'+esc(p.text||'')+'" placeholder="My brother ___ soccer every Saturday.">'
+    +(String(p.text||'').indexOf('___')<0?'<div class="note">This sentence has no ___ in it yet, so there is nowhere for the answer to go.</div>':'')
+    +'<label style="margin-top:16px">Choices</label>'+lineList(i,'options',p.options,'plays')
+    +'<div class="grid2" style="margin-top:16px">'
+    +'<div><label>Right answer</label><select data-q="'+i+'" data-pf="answer">'+ansOpts+'</select></div>'
+    +'<div><label>Why it is right</label><input type="text" data-q="'+i+'" data-pf="why" value="'+esc(p.why||'')+'" placeholder="My brother is one person."></div></div>'
+    +(wrongRows?'<label style="margin-top:16px">Why each other choice is wrong</label>'+wrongRows:'')
+    +'<div style="margin-top:16px"><label>Skill for this question</label><select data-q="'+i+'" data-pf="skill">'+skillOptions(p.skill||a.skill)+'</select></div>';
+}
+function bodyProof(a,p,i){
+  return '<label>Passage</label>'
+    +'<p class="hint" style="margin:0 0 8px">Type it with the mistakes in it. Then select a mistake and press Mark, and type what it should say.</p>'
+    +'<textarea data-q="'+i+'" data-pf="passage" id="pass'+i+'" style="min-height:120px">'+esc(p.passage||'')+'</textarea>'
+    +'<div class="marktools"><button class="tiny" data-mark="'+i+'">Mark what I selected</button>'
+    +'<button class="tiny" data-unmark="'+i+'">Clear all marks</button>'
+    +'<span style="font-size:12px;color:var(--muted)">'+countErrors(p.passage)+' mistakes marked</span></div>'
+    +'<div class="pv">'+proofPreview(p.passage)+'</div>'
+    +errorSkillRows(a,p,i);
+}
+function countErrors(s){ return (String(s||'').match(/\[[^\|\]]+\|[^\]]+\]/g)||[]).length; }
+function proofPreview(s){
+  if(!s) return '<span style="color:var(--muted)">Nothing typed yet.</span>';
+  return esc(s).replace(/\[([^\|\]]+)\|([^\]]+)\]/g,function(m,w,c){
+    return '<mark>'+w+' <b>&rarr; '+c+'</b></mark>';});
+}
+function errorSkillRows(a,p,i){
+  var errs=[], re=/\[([^\|\]]+)\|([^\]]+)\]/g, m;
+  while((m=re.exec(String(p.passage||'')))!==null) errs.push(m[2]);
+  if(!errs.length) return '';
+  var rows='';
+  errs.forEach(function(c){
+    rows+='<div class="trans"><span style="font-weight:700;color:var(--ink)">'+esc(c)+'</span>'
+      +'<select data-q="'+i+'" data-errsk="'+esc(c)+'">'+skillOptions((p.skills&&p.skills[c])||a.skill)+'</select></div>';
+  });
+  return '<label style="margin-top:16px">Which skill is each mistake</label>'
+    +'<p class="hint" style="margin:0 0 8px">This is what lets the reports separate capital-letter errors from verb errors.</p>'+rows;
+}
+
+/* ============================================================
+   PROMPT WIRING
+   ============================================================ */
+function wirePrompts(a){
+  var each=function(sel,fn){var n=root.querySelectorAll(sel);for(var i=0;i<n.length;i++)fn(n[i]);};
+  var P=function(el){return a.prompts[parseInt(el.getAttribute('data-q'),10)];};
+
+  each('[data-toggle]',function(el){
+    el.onclick=function(e){
+      if(e.target.tagName==='BUTTON') return;
+      var i=parseInt(this.getAttribute('data-toggle'),10);
+      a.prompts[i]._open = (a.prompts[i]._open===false);
+      render();
+    };
+  });
+  each('[data-delq]',function(el){
+    el.onclick=function(){
+      var i=parseInt(this.getAttribute('data-delq'),10);
+      if(!confirm('Delete question '+(i+1)+'?')) return;
+      a.prompts.splice(i,1); markDirty(); render();
+    };
+  });
+  each('[data-up]',function(el){
+    el.onclick=function(){
+      var i=parseInt(this.getAttribute('data-up'),10); if(i===0) return;
+      var t=a.prompts[i-1]; a.prompts[i-1]=a.prompts[i]; a.prompts[i]=t; markDirty(); render();
+    };
+  });
+  each('[data-down]',function(el){
+    el.onclick=function(){
+      var i=parseInt(this.getAttribute('data-down'),10); if(i>=a.prompts.length-1) return;
+      var t=a.prompts[i+1]; a.prompts[i+1]=a.prompts[i]; a.prompts[i]=t; markDirty(); render();
+    };
+  });
+
+  /* plain fields */
+  each('[data-pf]',function(el){
+    var ev = el.tagName==='SELECT' ? 'onchange' : 'oninput';
+    el[ev]=function(){ P(this)[this.getAttribute('data-pf')]=this.value; markDirty();
+      if(this.getAttribute('data-pf')==='passage'){ refreshProof(a,parseInt(this.getAttribute('data-q'),10)); } };
+  });
+
+  /* line lists */
+  each('[data-list]',function(el){
+    el.oninput=function(){
+      var p=P(this), f=this.getAttribute('data-list'), j=parseInt(this.getAttribute('data-j'),10);
+      p[f]=p[f]||[]; p[f][j]=this.value; markDirty();
+    };
+  });
+  each('[data-addl]',function(el){
+    el.onclick=function(){
+      var p=P(this), f=this.getAttribute('data-addl');
+      p[f]=p[f]||[]; p[f].push(''); markDirty(); render();
+    };
+  });
+  each('[data-rml]',function(el){
+    el.onclick=function(){
+      var p=P(this), f=this.getAttribute('data-rml'), j=parseInt(this.getAttribute('data-j'),10);
+      p[f].splice(j,1); markDirty(); render();
+    };
+  });
+
+  /* rules */
+  each('[data-rf]',function(el){
+    var ev = el.tagName==='SELECT' ? 'onchange' : 'oninput';
+    el[ev]=function(){
+      var p=P(this), j=parseInt(this.getAttribute('data-rj'),10), f=this.getAttribute('data-rf');
+      var r=p.rules[j];
+      if(f==='fb'){ r.feedback=this.value; markDirty(); return; }
+      if(f==='mode'){ r._mode=this.value; compileRule(r); markDirty(); render(); return; }
+      r._value=this.value; compileRule(r); markDirty();
+    };
+  });
+  each('[data-addr]',function(el){
+    el.onclick=function(){
+      var p=P(this); p.rules=p.rules||[];
+      var r={_mode:'word_in',_value:'',feedback:''}; compileRule(r); p.rules.push(r);
+      markDirty(); render();
+    };
+  });
+  each('[data-rmr]',function(el){
+    el.onclick=function(){
+      var p=P(this), j=parseInt(this.getAttribute('data-rmr'),10);
+      p.rules.splice(j,1); markDirty(); render();
+    };
+  });
+
+  /* blank: per-option explanations */
+  each('[data-wrong]',function(el){
+    el.oninput=function(){
+      var p=P(this); p.wrong=p.wrong||{};
+      p.wrong[this.getAttribute('data-wrong')]=this.value; markDirty();
+    };
+  });
+
+  /* proof: mark selection, skill per error */
+  each('[data-mark]',function(el){
+    el.onclick=function(){
+      var i=parseInt(this.getAttribute('data-mark'),10);
+      var ta=document.getElementById('pass'+i);
+      var s=ta.selectionStart, e=ta.selectionEnd;
+      if(s===e){ alert('Select the mistake in the passage first.'); ta.focus(); return; }
+      var chunk=ta.value.slice(s,e);
+      if(chunk.indexOf('[')>-1||chunk.indexOf(']')>-1){ alert('That selection already has a mark in it.'); return; }
+      var corr=prompt('What should "'+chunk+'" say?', chunk);
+      if(corr===null||!corr.trim()) return;
+      var p=a.prompts[i];
+      p.passage = ta.value.slice(0,s)+'['+chunk+'|'+corr.trim()+']'+ta.value.slice(e);
+      p.skills=p.skills||{}; if(!p.skills[corr.trim()]) p.skills[corr.trim()]=a.skill||'';
+      markDirty(); render();
+    };
+  });
+  each('[data-unmark]',function(el){
+    el.onclick=function(){
+      var i=parseInt(this.getAttribute('data-unmark'),10);
+      if(!confirm('Remove every mark from this passage?')) return;
+      var p=a.prompts[i];
+      p.passage=String(p.passage||'').replace(/\[([^\|\]]+)\|[^\]]+\]/g,'$1');
+      p.skills={}; markDirty(); render();
+    };
+  });
+  each('[data-errsk]',function(el){
+    el.onchange=function(){
+      var p=P(this); p.skills=p.skills||{};
+      p.skills[this.getAttribute('data-errsk')]=this.value; markDirty();
+    };
+  });
+}
+
+function refreshProof(a,i){
+  var p=a.prompts[i];
+  var box=root.querySelectorAll('.q')[i];
+  if(!box) return;
+  var pv=box.querySelector('.pv'); if(pv) pv.innerHTML=proofPreview(p.passage);
+  var cnt=box.querySelector('.marktools span'); if(cnt) cnt.textContent=countErrors(p.passage)+' mistakes marked';
+}
+
+function compileRule(r){
+  var m=r._mode, v=String(r._value==null?'':r._value);
+  delete r.than; delete r.pattern;
+  if(m==='short'){ r.when='shorter'; r.than=parseInt(v,10)||0; return; }
+  if(m==='copied'){ r.when='same'; return; }
+  if(m==='word_in'||m==='word_out'){
+    r.when = (m==='word_in')?'contains':'missing';
+    r.pattern = v ? '\\b'+rxEscape(v.trim())+'\\b' : '';
+    return;
+  }
+  r.when = (m==='text_in')?'contains':'missing';
+  r.pattern = v;
+}
+
+/* ============================================================
+   DOWNLOAD content.js  (backup / offline fallback)
+   ============================================================ */
+function stripPrivate(o){
+  return JSON.parse(JSON.stringify(o,function(k,v){ return k.charAt(0)==='_' ? undefined : v; }));
+}
+function downloadFile(){
+  var out={meta:DOC.meta,skills:DOC.skills,
+    activities:stripPrivate(DOC.activities).filter(function(a){return a.published!==false;})};
+  var txt='/* Generated by author.html on '+new Date().toISOString().slice(0,10)+'.\n'
+    +'   Supabase is the live source. This file is the backup the app falls back to. */\n\n'
+    +'window.QF_CONTENT = '+JSON.stringify(out,null,2)+';\n';
+  var b=new Blob([txt],{type:'text/javascript'});
+  var link=document.createElement('a');
+  link.href=URL.createObjectURL(b); link.download='content.js'; link.click();
+}
+
+window.onbeforeunload=function(){ if(DIRTY) return 'You have unsaved changes.'; };
+
+if(sessionStorage.getItem('qf_a')==='1') boot(); else gate();
+</script>
+</body>
+</html>

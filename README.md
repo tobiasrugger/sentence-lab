@@ -6,24 +6,45 @@ A Quill-shaped framework you own. Four activity types, a staged feedback engine,
 
 | File | What it is |
 |---|---|
-| `content.js` | **The only file you edit.** All activities live here as data. |
+| `author.html` | **Where you build activities.** A form, not a file to edit. Password `galileo2026`. |
 | `index.html` | Activity library students land on |
 | `play.html` | The player — all four activity types |
 | `dashboard.html` | Teacher reports (password `galileo2026`) |
+| `content.js` | Backup copy of the content, used only if Supabase is unreachable |
 | `schema.sql` | Run once in the Supabase SQL editor |
 
 ## Setup
 
 1. Open the Supabase SQL editor for `lhmwtfyceilgndpygivj` and run `schema.sql`. The anon key can't create tables, so this has to be done by hand.
 2. Drop all five files in a GitHub Pages repo folder.
-3. Open `index.html`. If activities appear, `content.js` parsed. If the page is blank, there's a comma or bracket error in `content.js` — check the browser console.
-4. Do one activity yourself, then open `dashboard.html` and confirm your attempts show up under Responses.
+3. Open `author.html`. The four starter activities load from `content.js` and are marked unsaved. Press **Save** once — that copies them into Supabase, which becomes the live source from then on.
+4. Do one activity yourself in `play.html`, then open `dashboard.html` and confirm your attempts show up under Responses.
 
 Nothing needs a build step and nothing needs npm.
 
-## Adding an activity
+## Where content lives
 
-Everything is one object in the `activities` array in `content.js`.
+`author.html` writes activities to the `qf_activities` table. `index.html` and `play.html` read from that table first and fall back to `content.js` if the network is down or the table is empty — so a bad connection at the start of a period doesn't produce a blank page.
+
+That means **adding a question never requires a git push**. Open `author.html`, make the change, press Save, and the next student to load the page sees it.
+
+The **Download content.js** button writes out everything currently in the editor. Commit that file to the repo now and then so the fallback stays current; nothing breaks if you forget.
+
+## Building an activity
+
+Pick a type from the **New activity** dropdown in the sidebar, fill in the form, add questions, press Save. **Try it as a student** opens the real player so you can walk through it before assigning it.
+
+A few things the form does that are worth knowing about:
+
+- **Rules** are built from a dropdown — "the answer uses the word", "the answer is missing the word", "the answer is shorter than", "the answer just copies a sentence". Type a plain word and it's escaped for you. The "matches the pattern" option is there if you want to write a regular expression directly.
+- **Proofreading passages**: type the passage with the mistakes in it, select a mistake, press **Mark what I selected**, and type the correction. A live preview underneath shows every marked error. Each correction gets its own skill dropdown, which is what lets the reports separate capital-letter errors from verb errors.
+- **Skill names** live under Setup in the sidebar. The key is what's stored with every attempt; the label is what you read in the reports. Renaming a key rewrites it across all activities, but past student rows keep the old one, so rename before students practice a skill rather than after.
+- **Students can see this activity** is a checkbox — uncheck it to work on something without it appearing in the library.
+- Changing the **web address name** changes the activity's URL and its identity in the reports. Old results stay under the old name.
+
+Everything below describes the underlying data shape, in case you want to read the JSON or hand-edit the fallback file.
+
+Everything is one object in the `activities` array.
 
 ```js
 {
@@ -125,7 +146,6 @@ Five attempts per prompt, one point either way, exactly as Quill scores it. Tapp
 
 ## Notes
 
-- All content is a plain object, so when you want to author without a git push, move activities into the `qf_activities` table (already in `schema.sql`) and fetch them in place of `content.js`.
 - Speech buttons use the Web Speech API. Silent on browsers without it, nothing breaks.
 - Directions translate per student; the language choice persists in `localStorage`.
 - The AI path goes through the Supabase edge function, never the Anthropic API from the browser.

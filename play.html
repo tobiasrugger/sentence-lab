@@ -825,9 +825,43 @@ function screenReport(){
 }
 
 /* ============================================================
+   CONTENT SOURCE
+   Supabase is the live source (author.html writes there).
+   content.js is the fallback if the network is down or the
+   table is empty, so the app never comes up blank.
+   ============================================================ */
+function loadContent(){
+  return fetch(SUPA_URL+'/rest/v1/qf_activities?select=id,payload,published&limit=500',{headers:sbHeaders()})
+    .then(function(r){ return r.json(); })
+    .then(function(rows){
+      if(!Array.isArray(rows) || !rows.length) return;
+      var meta=null, acts=[];
+      rows.forEach(function(r){
+        if(r.id==='__meta__'){ meta=r.payload; return; }
+        if(r.published===false) return;
+        if(r.payload) acts.push(r.payload);
+      });
+      if(!acts.length) return;
+      if(meta && meta.order){
+        var byId={}; acts.forEach(function(a){ byId[a.id]=a; });
+        var sorted=[];
+        meta.order.forEach(function(id){ if(byId[id]){ sorted.push(byId[id]); delete byId[id]; } });
+        Object.keys(byId).forEach(function(k){ sorted.push(byId[k]); });
+        acts=sorted;
+      }
+      window.QF_CONTENT = {
+        meta:   (meta && meta.meta)   || (window.QF_CONTENT && QF_CONTENT.meta)   || {title:'Sentence Lab',languages:[]},
+        skills: (meta && meta.skills) || (window.QF_CONTENT && QF_CONTENT.skills) || {},
+        activities: acts
+      };
+    })
+    .catch(function(){ /* keep content.js */ });
+}
+
+/* ============================================================
    BOOT
    ============================================================ */
-screenLogin();
+loadContent().then(screenLogin);
 </script>
 </body>
 </html>
